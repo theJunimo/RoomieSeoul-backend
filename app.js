@@ -3,14 +3,18 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const path = require('path');
 const session = require('express-session');
-const {sequelize} = require('./models');
+const { sequelize } = require('./models');
+const passport = require('passport');
 
 require('dotenv').config();
 
 const userRouter = require('./routes/user');
+const authRouter = require('./routes/auth');
+const passportConfig = require('./passport');
 
 const app = express();
 sequelize.sync();
+passportConfig(passport);
 
 app.set('port', process.env.PORT || 8001);
 
@@ -28,8 +32,11 @@ app.use(session({
         secure: false,
     },
 }));
+app.use(passport.initialize());
+app.use(passport.session());
 
-app.use('/user', userRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/user', userRouter);
 
 app.use((req, res, next) => {
     const err = new Error('Not Found');
